@@ -1,42 +1,31 @@
 <template>
-  <div id="basicLayout">
-    <a-layout style="height: 100vh">
-      <a-layout-header class="header">
-        <GlobalHeader />
-      </a-layout-header>
-      <a-layout-content class="content">
-        <router-view />
-      </a-layout-content>
-      <a-layout-footer class="footer">
-        <a href="https://blog.csdn.net/m0_75262255?spm=1000.2115.3001.5343" target="_blank">杭州师范大学-信息科学与技术学院-软工222-PleaSure乐事</a>
-      </a-layout-footer>
-    </a-layout>
-  </div>
+  <a-layout class="basic-layout">
+    <!-- 顶部导航栏 -->
+    <GlobalHeader />
+    <!-- 主要内容区域 -->
+    <a-layout-content class="main-content">
+      <router-view />
+    </a-layout-content>
+    <!-- 底部版权信息 -->
+    <GlobalFooter />
+  </a-layout>
 </template>
-<script setup lang="ts">
 
+<script setup lang="ts">
 import GlobalHeader from '@/components/GlobalHeader.vue'
+import GlobalFooter from '@/components/GlobalFooter.vue'
 </script>
+
 <style scoped>
-#basicLayout .content {
-  background: linear-gradient(to right, #efefef, #fff);
-  margin-bottom: 40px;
-  padding: 20px;
-  overflow: auto;
+.basic-layout {
+  background: none;
 }
-#basicLayout .footer {
-  background: #efefef;
-  padding: 16px;
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  text-align: center;
-}
-#basicLayout .header{
-  padding-inline: 20px;
+
+.main-content {
+  max-width: 1200px;
+  width: 100%;
+  padding: 24px;
   background: white;
-  color: unset;
-  margin-bottom: 16px;
+  margin: 16px auto 56px;
 }
 </style>

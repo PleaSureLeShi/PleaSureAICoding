@@ -1,25 +1,33 @@
 <template>
-  <div id="globalHeader">
+  <a-layout-header class="header">
     <a-row :wrap="false">
+      <!-- 左侧：Logo和标题 -->
       <a-col flex="200px">
-        <router-link to="/">
-          <div class="title-bar">
-            <img class="logo" src="../assets/logo.png" alt="logo">
-            <div class="title">PleaSureAICoding</div>
+        <RouterLink to="/">
+          <div class="header-left">
+            <img class="logo" src="@/assets/logo.png" alt="Logo" />
+            <h1 class="site-title">PleaSureAICoding</h1>
           </div>
-        </router-link>
+        </RouterLink>
       </a-col>
+      <!-- 中间：导航菜单 -->
       <a-col flex="auto">
-        <a-menu v-model:selectedKeys="current" mode="horizontal" @click="doMenuClick" :items="items" />
+        <a-menu
+          v-model:selectedKeys="selectedKeys"
+          mode="horizontal"
+          :items="menuItems"
+          @click="handleMenuClick"
+        />
       </a-col>
-      <a-col flex="120px">
+      <!-- 右侧：用户操作区域 -->
+      <a-col>
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
             <a-dropdown>
-              <ASpace>
+              <a-space>
                 <a-avatar :src="loginUserStore.loginUser.userAvatar" />
                 {{ loginUserStore.loginUser.userName ?? '无名' }}
-              </ASpace>
+              </a-space>
               <template #overlay>
                 <a-menu>
                   <a-menu-item @click="doLogout">
@@ -30,58 +38,72 @@
               </template>
             </a-dropdown>
           </div>
-
           <div v-else>
             <a-button type="primary" href="/user/login">登录</a-button>
           </div>
         </div>
-
-
       </a-col>
     </a-row>
-  </div>
-
+  </a-layout-header>
 </template>
-<script lang="ts" setup>
-import { computed, h, ref } from 'vue'
-import { HomeOutlined, AppstoreOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue'
-import { MenuProps, message } from 'ant-design-vue'
-import { useRouter } from 'vue-router'
-import { useLoginUserStore } from '@/stores/useLoginUserStore'
-import { userLogoutUsingPost } from '@/api/userController'
 
+<script setup lang="ts">
+import {computed, h, ref} from 'vue'
+import { useRouter } from 'vue-router'
+import type { MenuProps } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
+import { useLoginUserStore } from '@/stores/loginUser.ts'
+import { LogoutOutlined } from '@ant-design/icons-vue'
+import { userLogout } from '@/api/userController.ts'
+
+// 获取登录用户状态
 const loginUserStore = useLoginUserStore()
 
+const router = useRouter()
+// 当前选中菜单
+const selectedKeys = ref<string[]>(['/'])
+// 监听路由变化，更新当前选中菜单
+router.afterEach((to, from, next) => {
+  selectedKeys.value = [to.path]
+})
 
-const current = ref<string[]>(['mail'])
-// 菜单列表
+// 菜单配置项
 const originItems = [
   {
     key: '/',
-    icon: () => h(HomeOutlined),
     label: '首页',
-    title: '首页'
+    title: '首页',
   },
   {
-    key: '/admin/userManagement',
-    icon: () => h(AppstoreOutlined),
+    key: '/admin/userManage',
     label: '用户管理',
-    title: '用户管理'
+    title: '用户管理',
   },
   {
-    key: '/others',
-    icon: () => h(SettingOutlined),
-    label: h('a', { href: 'https://blog.csdn.net/m0_75262255?spm=1000.2115.3001.5343', target: '_blank' }, '关于我'),
-    title: '我的CSDN首页'
-  }
+    key: 'others',
+    label: '关于站长',
+    title: '关于站长',
+    children: [
+      {
+        key: '/github',
+        label: h('a', { href: 'https://github.com/PleaSureLeShi', target: '_blank' }, 'PleaSure乐事的Github'),
+        title: 'Github',
+      },
+      {
+        key: 'csdn',
+        label: h('a', { href: 'https://blog.csdn.net/m0_75262255?spm=1000.2115.3001.5343', target: '_blank' }, 'PleaSure乐事的CSDN'),
+      }
+    ]
+  },
 ]
 
 // 过滤菜单项
 const filterMenus = (menus = [] as MenuProps['items']) => {
   return menus?.filter((menu) => {
-    if (menu.key.startsWith('/admin')) {
+    const menuKey = menu?.key as string
+    if (menuKey?.startsWith('/admin')) {
       const loginUser = loginUserStore.loginUser
-      if (!loginUser || loginUser.userRole !== "admin") {
+      if (!loginUser || loginUser.userRole !== 'admin') {
         return false
       }
     }
@@ -90,52 +112,57 @@ const filterMenus = (menus = [] as MenuProps['items']) => {
 }
 
 // 展示在菜单的路由数组
-const items = computed<MenuProps['items']>(() => filterMenus(originItems))
+const menuItems = computed<MenuProps['items']>(() => filterMenus(originItems))
 
-//顶部菜单栏选中
-const router = useRouter()
-const doMenuClick = ({ key }) => {
-  router.push({
-    path: key
-  })
+// 处理菜单点击
+const handleMenuClick: MenuProps['onClick'] = (e) => {
+  const key = e.key as string
+  selectedKeys.value = [key]
+  // 跳转到对应页面
+  if (key.startsWith('/')) {
+    router.push(key)
+  }
 }
-//监听顶部菜单栏,高亮更新
-router.afterEach((to, from, next) => {
-  current.value = [to.path]
-})
 
-// 用户注销
+// 退出登录
 const doLogout = async () => {
-  const res = await userLogoutUsingPost()
-  console.log(res)
+  const res = await userLogout()
   if (res.data.code === 0) {
     loginUserStore.setLoginUser({
-      userName: '未登录'
+      userName: '未登录',
     })
     message.success('退出登录成功')
     await router.push('/user/login')
   } else {
-    message.error('退出登录失败，' + res.data.message)
+    message.error('退出登录失败，' + res.data.msg)
   }
 }
-
 </script>
 
 <style scoped>
-#globalHeader .title-bar {
-  display: flex;
-  align-items: center;
+.header {
+  background: #fff;
+  padding: 0 24px;
 }
 
-.title {
-  color: black;
-  font-size: 20px;
-  margin-left: 10px;
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .logo {
-  width: 40px;
-  height: 40px;
+  height: 48px;
+  width: 48px;
+}
+
+.site-title {
+  margin: 0;
+  font-size: 17px;
+  color: #1890ff;
+}
+
+.ant-menu-horizontal {
+  border-bottom: none !important;
 }
 </style>
-

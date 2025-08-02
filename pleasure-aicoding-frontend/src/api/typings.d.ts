@@ -1,41 +1,41 @@
 declare namespace API {
-  type BaseResponseBoolean_ = {
+  type BaseResponseBoolean = {
     code?: number
     data?: boolean
     message?: string
   }
 
-  type BaseResponseLoginUserVO_ = {
+  type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
     message?: string
   }
 
-  type BaseResponseLong_ = {
+  type BaseResponseLong = {
     code?: number
     data?: number
     message?: string
   }
 
-  type BaseResponsePageUserVO_ = {
+  type BaseResponsePageUserVO = {
     code?: number
-    data?: PageUserVO_
+    data?: PageUserVO
     message?: string
   }
 
-  type BaseResponseString_ = {
+  type BaseResponseString = {
     code?: number
     data?: string
     message?: string
   }
 
-  type BaseResponseUser_ = {
+  type BaseResponseUser = {
     code?: number
     data?: User
     message?: string
   }
 
-  type BaseResponseUserVO_ = {
+  type BaseResponseUserVO = {
     code?: number
     data?: UserVO
     message?: string
@@ -45,53 +45,52 @@ declare namespace API {
     id?: number
   }
 
-  type getUserByIdUsingGETParams = {
-    /** id */
-    id?: number
+  type getUserByIdParams = {
+    id: number
   }
 
-  type getUserVOByIdUsingGETParams = {
-    /** id */
-    id?: number
+  type getUserVOByIdParams = {
+    id: number
   }
 
   type LoginUserVO = {
-    createTime?: string
     id?: number
-    updateTime?: string
     userAccount?: string
-    userAvatar?: string
     userName?: string
+    userAvatar?: string
     userProfile?: string
     userRole?: string
+    createTime?: string
+    updateTime?: string
   }
 
-  type PageUserVO_ = {
-    current?: number
-    pages?: number
+  type PageUserVO = {
     records?: UserVO[]
-    size?: number
-    total?: number
+    pageNumber?: number
+    pageSize?: number
+    totalPage?: number
+    totalRow?: number
+    optimizeCountQuery?: boolean
   }
 
   type User = {
-    createTime?: string
-    editTime?: string
     id?: number
-    isDelete?: number
-    updateTime?: string
     userAccount?: string
-    userAvatar?: string
-    userName?: string
     userPassword?: string
+    userName?: string
+    userAvatar?: string
     userProfile?: string
     userRole?: string
+    editTime?: string
+    createTime?: string
+    updateTime?: string
+    isDelete?: number
   }
 
   type UserAddRequest = {
+    userName?: string
     userAccount?: string
     userAvatar?: string
-    userName?: string
     userProfile?: string
     userRole?: string
   }
@@ -102,38 +101,38 @@ declare namespace API {
   }
 
   type UserQueryRequest = {
-    current?: number
-    id?: number
+    pageNum?: number
     pageSize?: number
     sortField?: string
     sortOrder?: string
-    userAccount?: string
+    id?: number
     userName?: string
+    userAccount?: string
     userProfile?: string
     userRole?: string
   }
 
   type UserRegisterRequest = {
-    checkPassword?: string
     userAccount?: string
     userPassword?: string
+    checkPassword?: string
   }
 
   type UserUpdateRequest = {
     id?: number
-    userAvatar?: string
     userName?: string
+    userAvatar?: string
     userProfile?: string
     userRole?: string
   }
 
   type UserVO = {
-    createTime?: string
     id?: number
     userAccount?: string
-    userAvatar?: string
     userName?: string
+    userAvatar?: string
     userProfile?: string
     userRole?: string
+    createTime?: string
   }
 }
