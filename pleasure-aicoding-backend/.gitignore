@@ -1,5 +1,7 @@
+# macOS
+.DS_Store
+
 ### CUSTOM ###
-### 保护敏感信息 ###
 application-local.yml
 tmp/
 HELP.md
