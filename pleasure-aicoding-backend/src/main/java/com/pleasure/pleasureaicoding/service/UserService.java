@@ -2,7 +2,7 @@ package com.pleasure.pleasureaicoding.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
-import com.pleasure.pleasureaicoding.model.dto.UserQueryRequest;
+import com.pleasure.pleasureaicoding.model.dto.user.UserQueryRequest;
 import com.pleasure.pleasureaicoding.model.entity.User;
 import com.pleasure.pleasureaicoding.model.vo.LoginUserVO;
 import com.pleasure.pleasureaicoding.model.vo.UserVO;

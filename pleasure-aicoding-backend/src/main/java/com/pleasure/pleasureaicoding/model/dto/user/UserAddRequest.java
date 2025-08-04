@@ -1,4 +1,4 @@
-package com.pleasure.pleasureaicoding.model.dto;
+package com.pleasure.pleasureaicoding.model.dto.user;
 
 import lombok.Data;
 
