@@ -2,8 +2,6 @@ package com.pleasure.pleasureaicoding.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
-import com.pleasure.pleasureaicoding.exception.BusinessException;
-import com.pleasure.pleasureaicoding.exception.ErrorCode;
 import com.pleasure.pleasureaicoding.model.dto.UserQueryRequest;
 import com.pleasure.pleasureaicoding.model.entity.User;
 import com.pleasure.pleasureaicoding.model.vo.LoginUserVO;
