@@ -1,5 +1,7 @@
 package com.pleasure.pleasureaicoding.model.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -10,7 +12,9 @@ public class AppVO implements Serializable {
 
     /**
      * id
+     * 添加json注解保证前端js的精度不会丢失
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /**
@@ -50,7 +54,9 @@ public class AppVO implements Serializable {
 
     /**
      * 创建用户id
+     * 添加json注解保证前端js的精度不会丢失
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     /**

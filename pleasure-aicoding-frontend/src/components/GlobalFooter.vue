@@ -3,12 +3,12 @@
     <div class="footer-content">
       <p class="copyright">
         <a
-          href="https://www.codefather.cn"
+          href="https://blog.csdn.net/m0_75262255?spm=1000.2115.3001.5343"
           target="_blank"
           rel="noopener noreferrer"
           class="author-link"
         >
-          编程导航原创项目 by 程序员鱼皮
+          PleaSure乐事 - AI编程学习助手
         </a>
       </p>
     </div>
