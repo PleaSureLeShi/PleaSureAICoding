@@ -4,13 +4,17 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 @Data
 public class LoginUserVO implements Serializable {
 
     /**
      * 用户 id
+     * 添加json注解保证前端js的精度不会丢失
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /**
