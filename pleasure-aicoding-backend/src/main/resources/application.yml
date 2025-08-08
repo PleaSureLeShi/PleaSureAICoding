@@ -6,6 +6,13 @@ spring:
     url: jdbc:mysql://localhost:3306/pleasure_aicoding
     username: root
     password: YJH6065hz
+  # Redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      ttl: 3600
   profiles:
     active: local
 server:

@@ -6,6 +6,7 @@ import com.mybatisflex.core.service.IService;
 import com.pleasure.pleasureaicoding.model.dto.chathistory.ChatHistoryQueryRequest;
 import com.pleasure.pleasureaicoding.model.entity.ChatHistory;
 import com.pleasure.pleasureaicoding.model.entity.User;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import java.time.LocalDateTime;
 
@@ -16,11 +17,14 @@ import java.time.LocalDateTime;
  */
 public interface ChatHistoryService extends IService<ChatHistory> {
     boolean addChatMessage(Long appId, String message, String messageType, Long userId);
+
     boolean deleteByAppId(Long appId);
 
     Page<ChatHistory> listAppChatHistoryByPage(Long appId, int pageSize,
                                                LocalDateTime lastCreateTime,
                                                User loginUser);
+    //加载对话历史
+    int loadChatHistoryToMemory(Long appId, MessageWindowChatMemory chatMemory, int maxCount);
 
     QueryWrapper getQueryWrapper(ChatHistoryQueryRequest chatHistoryQueryRequest);
 }
