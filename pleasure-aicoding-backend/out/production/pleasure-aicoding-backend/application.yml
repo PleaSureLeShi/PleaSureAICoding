@@ -1,6 +1,11 @@
 spring:
   application:
     name: pleasure-AICoding
+  # session 配置
+  session:
+    store-type: redis
+    # session 30天过期
+    timeout: 2592000
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/pleasure_aicoding
@@ -19,6 +24,10 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    # 前端cookie 30 天过期
+    session:
+      cookie:
+        max-age: 2592000
 # springdoc-openapi
 springdoc:
   group-configs:
