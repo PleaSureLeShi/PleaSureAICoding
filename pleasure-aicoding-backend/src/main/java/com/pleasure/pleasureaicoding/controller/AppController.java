@@ -3,8 +3,6 @@ package com.pleasure.pleasureaicoding.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.pleasure.pleasureaicoding.annotation.AuthCheck;
@@ -80,13 +78,7 @@ public class AppController {
                 ));
     }
 
-    /**
-     * 应用部署
-     *
-     * @param appDeployRequest 部署请求
-     * @param request          请求
-     * @return 部署 URL
-     */
+    // 应用部署
     @PostMapping("/deploy")
     public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
@@ -99,13 +91,7 @@ public class AppController {
         return ResultUtils.success(deployUrl);
     }
 
-    /**
-     * 创建应用
-     *
-     * @param appAddRequest 创建应用请求
-     * @param request       请求
-     * @return 应用 id
-     */
+    // 创建应用
     @PostMapping("/add")
     public BaseResponse<String> addApp(@RequestBody AppAddRequest appAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(appAddRequest == null, ErrorCode.PARAMS_ERROR);
@@ -120,8 +106,8 @@ public class AppController {
         app.setUserId(loginUser.getId());
         // 应用名称暂时为 initPrompt 前 12 位
         app.setAppName(initPrompt.substring(0, Math.min(initPrompt.length(), 12)));
-        // 暂时设置为多文件生成
-        app.setCodeGenType(CodeGenTypeEnum.MULTI_FILE.getValue());
+        // 暂时设置为vue文件生成
+        app.setCodeGenType(CodeGenTypeEnum.VUE_PROJECT.getValue());
         // 插入数据库
         boolean result = appService.save(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -129,13 +115,7 @@ public class AppController {
         return ResultUtils.success(app.getId().toString());
     }
 
-    /**
-     * 更新应用（用户只能更新自己的应用名称）
-     *
-     * @param appUpdateRequest 更新请求
-     * @param request          请求
-     * @return 更新结果
-     */
+    // 更新应用（用户只能更新自己的应用名称）
     @PostMapping("/update")
     public BaseResponse<Boolean> updateApp(@RequestBody AppUpdateRequest appUpdateRequest, HttpServletRequest request) {
         if (appUpdateRequest == null || appUpdateRequest.getId() == null) {
@@ -160,13 +140,7 @@ public class AppController {
         return ResultUtils.success(true);
     }
 
-    /**
-     * 删除应用（用户只能删除自己的应用）
-     *
-     * @param deleteRequest 删除请求
-     * @param request       请求
-     * @return 删除结果
-     */
+    // 删除应用（用户只能删除自己的应用）
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteApp(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
@@ -185,12 +159,7 @@ public class AppController {
         return ResultUtils.success(result);
     }
 
-    /**
-     * 根据 id 获取应用详情
-     *
-     * @param id 应用 id
-     * @return 应用详情
-     */
+    // 根据 id 获取应用详情
     @GetMapping("/get/vo")
     public BaseResponse<AppVO> getAppVOById(long id) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
@@ -201,13 +170,7 @@ public class AppController {
         return ResultUtils.success(appService.getAppVo(app));
     }
 
-    /**
-     * 分页获取当前用户创建的应用列表
-     *
-     * @param appQueryRequest 查询请求
-     * @param request         请求
-     * @return 应用列表
-     */
+    // 分页获取当前用户创建的应用列表
     @PostMapping("/my/list/page/vo")
     public BaseResponse<Page<AppVO>> listMyAppVOByPage(@RequestBody AppQueryRequest appQueryRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
@@ -227,12 +190,7 @@ public class AppController {
         return ResultUtils.success(appVOPage);
     }
 
-    /**
-     * 分页获取精选应用列表
-     *
-     * @param appQueryRequest 查询请求
-     * @return 精选应用列表
-     */
+    // 分页获取精选应用列表
     @PostMapping("/good/list/page/vo")
     public BaseResponse<Page<AppVO>> listGoodAppVOByPage(@RequestBody AppQueryRequest appQueryRequest) {
         ThrowUtils.throwIf(appQueryRequest == null, ErrorCode.PARAMS_ERROR);
@@ -252,12 +210,7 @@ public class AppController {
         return ResultUtils.success(appVOPage);
     }
 
-    /**
-     * 管理员删除应用
-     *
-     * @param deleteRequest 删除请求
-     * @return 删除结果
-     */
+    // 管理员删除应用
     @PostMapping("/admin/delete")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteAppByAdmin(@RequestBody DeleteRequest deleteRequest) {
@@ -272,12 +225,7 @@ public class AppController {
         return ResultUtils.success(result);
     }
 
-    /**
-     * 管理员更新应用
-     *
-     * @param appAdminUpdateRequest 更新请求
-     * @return 更新结果
-     */
+    // 管理员更新应用
     @PostMapping("/admin/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateAppByAdmin(@RequestBody AppAdminUpdateRequest appAdminUpdateRequest) {
@@ -297,12 +245,7 @@ public class AppController {
         return ResultUtils.success(true);
     }
 
-    /**
-     * 管理员分页获取应用列表
-     *
-     * @param appQueryRequest 查询请求
-     * @return 应用列表
-     */
+    // 管理员分页获取应用列表
     @PostMapping("/admin/list/page/vo")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<AppVO>> listAppVOByPageByAdmin(@RequestBody AppQueryRequest appQueryRequest) {
@@ -318,12 +261,7 @@ public class AppController {
         return ResultUtils.success(appVOPage);
     }
 
-    /**
-     * 管理员根据 id 获取应用详情
-     *
-     * @param id 应用 id
-     * @return 应用详情
-     */
+    // 管理员根据 id 获取应用详情
     @GetMapping("/admin/get/vo")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<AppVO> getAppVOByIdByAdmin(long id) {
