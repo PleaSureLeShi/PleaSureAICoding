@@ -5,9 +5,12 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.pleasure.pleasureaicoding.ai.model.message.*;
+import com.pleasure.pleasureaicoding.constant.AppConstant;
+import com.pleasure.pleasureaicoding.core.builder.VueProjectBuilder;
 import com.pleasure.pleasureaicoding.model.entity.User;
 import com.pleasure.pleasureaicoding.model.enums.ChatHistoryMessageTypeEnum;
 import com.pleasure.pleasureaicoding.service.ChatHistoryService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -16,12 +19,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * JSON 消息流处理器
- * 处理 VUE_PROJECT 类型的复杂流式响应，包含工具调用信息
+ * JSON 消息流处理器：处理 VUE_PROJECT 类型的复杂流式响应，包含工具调用信息
  */
 @Slf4j
 @Component
 public class JsonMessageStreamHandler {
+
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
 
     // 处理 TokenStream（VUE_PROJECT）, 解析 JSON 消息并重组为完整的响应格式
     public Flux<String> handle(Flux<String> originFlux,
@@ -41,6 +46,9 @@ public class JsonMessageStreamHandler {
                     // 流式响应完成后，添加 AI 消息到对话历史
                     String aiResponse = chatHistoryStringBuilder.toString();
                     chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
+                    // 异步构造 Vue 项目
+                    String projectPath = AppConstant.CODE_OUTPUT_ROOT_DIR + "/vue_project_" + appId;
+                    vueProjectBuilder.buildProjectAsync(projectPath);
                 })
                 .doOnError(error -> {
                     // 如果AI回复失败，也要记录错误消息
@@ -49,9 +57,7 @@ public class JsonMessageStreamHandler {
                 });
     }
 
-    /**
-     * 解析并收集 TokenStream 数据
-     */
+    // 解析并收集 TokenStream 数据
     private String handleJsonMessageChunk(String chunk, StringBuilder chatHistoryStringBuilder, Set<String> seenToolIds) {
         // 解析 JSON
         StreamMessage streamMessage = JSONUtil.toBean(chunk, StreamMessage.class);

@@ -4,6 +4,7 @@
 export enum CodeGenTypeEnum {
   HTML = 'html',
   MULTI_FILE = 'multi_file',
+  Vue_PROJECT = 'vue_project',
 }
 
 /**
@@ -17,6 +18,10 @@ export const CODE_GEN_TYPE_CONFIG = {
   [CodeGenTypeEnum.MULTI_FILE]: {
     label: '原生多文件模式',
     value: CodeGenTypeEnum.MULTI_FILE,
+  },
+  [CodeGenTypeEnum.Vue_PROJECT]: {
+    label: '原生多文件模式',
+    value: CodeGenTypeEnum.Vue_PROJECT,
   },
 } as const
 
