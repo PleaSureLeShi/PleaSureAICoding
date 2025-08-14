@@ -2,6 +2,8 @@ package com.pleasure.pleasureaicoding.ai;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.pleasure.pleasureaicoding.ai.promptguard.PromptSafetyInputGuardrail;
+import com.pleasure.pleasureaicoding.ai.promptguard.RetryOutputGuardrail;
 import com.pleasure.pleasureaicoding.ai.tools.*;
 import com.pleasure.pleasureaicoding.exception.BusinessException;
 import com.pleasure.pleasureaicoding.exception.ErrorCode;
@@ -87,6 +89,9 @@ public class AiCodeGeneratorServiceFactory {
                         .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
                                 toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
                         ))
+                        .inputGuardrails(new PromptSafetyInputGuardrail())  // 添加输入护轨
+                        .maxSequentialToolsInvocations(15)  // 最多连续调用 15 次工具，预防AI回答进入死循环
+//                        .outputGuardrails(new RetryOutputGuardrail()) // 添加输出护轨，为了流式输出，将其注释掉
                         .build();
             }
             case HTML, MULTI_FILE -> {
@@ -96,6 +101,9 @@ public class AiCodeGeneratorServiceFactory {
                         .chatModel(chatModel)
                         .streamingChatModel(openAiStreamingChatModel)
                         .chatMemory(chatMemory)
+                        .inputGuardrails(new PromptSafetyInputGuardrail()) // 添加输入护轨
+                        .maxSequentialToolsInvocations(15)  // 最多连续调用 15 次工具，预防AI回答进入死循环
+//                        .outputGuardrails(new RetryOutputGuardrail()) // 添加输出护轨，为了流式输出，将其注释掉
                         .build();
             }
             default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR,
