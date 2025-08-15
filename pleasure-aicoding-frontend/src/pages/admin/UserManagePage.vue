@@ -36,7 +36,27 @@
           {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-button danger @click="doDelete(record.id)">删除</a-button>
+          <a-space>
+            <!-- 角色切换按钮 -->
+            <a-button 
+              v-if="record.userRole === 'user'" 
+              type="primary" 
+              size="small"
+              @click="doSetRole(record.id, 'admin')"
+            >
+              设为管理员
+            </a-button>
+            <a-button 
+              v-else 
+              type="default" 
+              size="small"
+              @click="doSetRole(record.id, 'user')"
+            >
+              设为普通用户
+            </a-button>
+            <!-- 删除按钮 -->
+            <a-button danger size="small" @click="doDelete(record.id)">删除</a-button>
+          </a-space>
         </template>
       </template>
     </a-table>
@@ -44,7 +64,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { deleteUser, listUserVoByPage } from '@/api/userController.ts'
+import { deleteUser, listUserVoByPage, setUserRole } from '@/api/userController.ts'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
@@ -80,6 +100,7 @@ const columns = [
   {
     title: '操作',
     key: 'action',
+    width: 200, // 增加操作列宽度
   },
 ]
 
@@ -100,7 +121,7 @@ const fetchData = async () => {
   })
   if (res.data.data) {
     data.value = res.data.data.records ?? []
-    total.value = res.data.data.totalRow ?? 0
+    total.value = Number(res.data.data.totalRow) ?? 0
   } else {
     message.error('获取数据失败，' + res.data.message)
   }
@@ -129,6 +150,32 @@ const doSearch = () => {
   // 重置页码
   searchParams.pageNum = 1
   fetchData()
+}
+
+// 设置用户角色
+const doSetRole = async (id: number, role: string) => {
+  if (!id) {
+    return
+  }
+  
+  try {
+    const res = await setUserRole({
+      id: id,
+      userRole: role
+    })
+    
+    if (res.data.code === 0) {
+      const roleText = role === 'admin' ? '管理员' : '普通用户'
+      message.success(`已成功设置为${roleText}`)
+      // 刷新数据
+      fetchData()
+    } else {
+      message.error('设置角色失败：' + res.data.message)
+    }
+  } catch (error) {
+    console.error('设置角色失败:', error)
+    message.error('设置角色失败')
+  }
 }
 
 // 删除数据

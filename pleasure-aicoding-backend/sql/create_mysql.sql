@@ -22,6 +22,9 @@ create table if not exists user
     INDEX idx_userName (userName)
     ) comment '用户' collate = utf8mb4_unicode_ci;
 
+-- 修改用户头像字段类型为 LONGTEXT 以支持 base64 图片数据（如果需要设置头像的话就使用，不需要的话就不用运行）
+ALTER TABLE `user` MODIFY COLUMN `userAvatar` LONGTEXT COMMENT '用户头像';
+
 -- 应用表
 create table app
 (

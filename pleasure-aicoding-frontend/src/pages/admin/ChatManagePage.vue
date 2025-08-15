@@ -188,7 +188,7 @@ const deleteMessage = async (id: number | undefined) => {
     // 目前先显示成功，实际实现需要调用删除接口
     message.success('删除成功')
     // 刷新数据
-    fetchData()
+    await fetchData()
   } catch (error) {
     console.error('删除失败：', error)
     message.error('删除失败')

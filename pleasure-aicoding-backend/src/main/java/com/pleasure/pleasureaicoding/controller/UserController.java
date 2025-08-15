@@ -163,4 +163,43 @@ public class UserController {
         return ResultUtils.success(userVOPage);
     }
 
+    // 在 UserController 中添加以下方法
+
+    /**
+     * 用户更新自己的信息
+     */
+    @PostMapping("/update/my")
+    public BaseResponse<Boolean> updateMyInfo(@RequestBody UserSelfUpdateRequest userSelfUpdateRequest, HttpServletRequest request) {
+        if (userSelfUpdateRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        // 只能更新自己的信息
+        User user = new User();
+        user.setId(loginUser.getId());
+        user.setUserName(userSelfUpdateRequest.getUserName());
+        user.setUserAvatar(userSelfUpdateRequest.getUserAvatar());
+        user.setUserProfile(userSelfUpdateRequest.getUserProfile());
+        boolean result = userService.updateById(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 管理员设置用户角色
+     */
+    @PostMapping("/admin/set-role")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> setUserRole(@RequestBody UserSetRoleRequest userSetRoleRequest) {
+        if (userSetRoleRequest == null || userSetRoleRequest.getId() == null || userSetRoleRequest.getUserRole() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User user = new User();
+        user.setId(userSetRoleRequest.getId());
+        user.setUserRole(userSetRoleRequest.getUserRole());
+        boolean result = userService.updateById(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
 }
