@@ -1,0 +1,116 @@
+/* 全局样式 */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #f0f2f5;
+    font-family: Arial, sans-serif;
+}
+
+/* 顶部菜单栏 */
+#head {
+    background: dodgerblue;
+    height: 60px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    width: 100vw;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+#headContent {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 按钮样式 */
+#head .el-button {
+    margin-left: 10px;
+    color: white;
+    background-color: transparent;
+    border: none;
+    font-size: 1em;
+    font-family: inherit;
+    transition: background-color 0.3s ease;
+}
+
+#head .el-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 下拉菜单样式 */
+.el-dropdown-link {
+    cursor: pointer;
+}
+
+.el-dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.el-dropdown-menu__item {
+    padding: 10px 20px;
+    color: #333;
+    font-size: 14px;
+}
+
+.el-dropdown-menu__item:not(.is-disabled):hover {
+    background-color: #f5f7fa;
+    color: #409EFF;
+}
+
+/* 用户信息部分样式 */
+.el-dropdown-menu__item div {
+    padding: 10px;
+    text-align: left;
+}
+
+.el-dropdown-menu__item div p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.el-dropdown-menu__item div p strong {
+    color: #333;
+}
+/* AI 对话框样式 */
+.ai-dialog .el-dialog__body {
+    padding: 20px;
+}
+
+.ai-dialog .el-input {
+    margin-top: 20px;
+}
+
+.ai-dialog .el-tag {
+    margin-right: 10px;
+}
+
+/* 添加空状态样式 */
+.el-avatar {
+    background-color: #f0f2f5;
+}
+
+.el-avatar img {
+    object-fit: cover;
+}
+
+p {
+    margin: 10px 0;
+    color: #666;
+}
+
+p:empty::before {
+    content: "暂无信息";
+    color: #999;
+    font-style: italic;
+}

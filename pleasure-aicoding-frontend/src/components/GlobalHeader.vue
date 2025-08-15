@@ -140,8 +140,16 @@ const doLogout = async () => {
 
 <style scoped>
 .header {
-  background: #fff;
+  background: #1890ff;
   padding: 0 24px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .header-left {
@@ -158,10 +166,34 @@ const doLogout = async () => {
 .site-title {
   margin: 0;
   font-size: 17px;
-  color: #1890ff;
+  color: white;
+  font-weight: bold;
 }
 
 .ant-menu-horizontal {
   border-bottom: none !important;
+  background: #1890ff !important;
+  width: 90%;
+  margin-left: 18px;
+  height: 97%;
+}
+
+:deep(.ant-menu-item) {
+  color: white !important;
+  background: transparent !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+:deep(.ant-menu-item-selected) {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.user-login-status {
+  color: white;
+}
+
+.user-login-status :deep(.ant-avatar) {
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 </style>

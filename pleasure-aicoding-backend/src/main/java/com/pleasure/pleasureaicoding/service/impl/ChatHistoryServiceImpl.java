@@ -78,7 +78,11 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
         boolean isAdmin = UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole());
         boolean isCreator = app.getUserId().equals(loginUser.getId());
-        ThrowUtils.throwIf(!isAdmin && !isCreator, ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话历史");
+        boolean isFeaturedApp = app.getPriority() != null && app.getPriority() == 99; // 精选应用的priority为99
+        
+        ThrowUtils.throwIf(!isAdmin && !isCreator && !isFeaturedApp, 
+                          ErrorCode.NO_AUTH_ERROR, "无权查看该应用的对话历史");
+        
         // 构建查询条件
         ChatHistoryQueryRequest queryRequest = new ChatHistoryQueryRequest();
         queryRequest.setAppId(appId);

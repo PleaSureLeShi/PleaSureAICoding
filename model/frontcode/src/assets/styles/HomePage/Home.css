@@ -1,0 +1,304 @@
+/* 全局样式 */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #f0f2f5;
+    font-family: Arial, sans-serif;
+}
+
+/* 头部样式 */
+#head {
+    background: dodgerblue;
+    height: 60px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    width: 100vw;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+#headContent {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 按钮样式 */
+#head .el-button {
+    margin-left: 10px;
+    color: white;
+    background-color: transparent;
+    border: none;
+    font-size: 1em;
+    font-family: inherit;
+    transition: background-color 0.3s ease;
+}
+
+#head .el-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 下拉菜单样式 */
+.el-dropdown-link {
+    cursor: pointer;
+}
+
+.el-dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.el-dropdown-menu__item {
+    padding: 10px 20px;
+    color: #333;
+    font-size: 14px;
+}
+
+.el-dropdown-menu__item:not(.is-disabled):hover {
+    background-color: #f5f7fa;
+    color: #409EFF;
+}
+
+/* 用户信息部分样式 */
+.el-dropdown-menu__item div {
+    padding: 10px;
+    text-align: left;
+}
+
+.el-dropdown-menu__item div p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.el-dropdown-menu__item div p strong {
+    color: #333;
+}
+
+/* 轮播图的样式 */
+#picture .el-carousel__item h3 {
+    color: #475669;
+    font-size: 18px;
+    opacity: 0.75;
+    line-height: 300px;
+    margin: 0;
+}
+
+#picture .el-carousel__item:nth-child(2n) {
+    background-color: #99a9bf;
+}
+
+#picture .el-carousel__item:nth-child(2n+1) {
+    background-color: #d3dce6;
+}
+
+#picture .el-carousel {
+    height: 300px;
+}
+
+/* 引导部分样式 */
+.content-container {
+    background: linear-gradient(to right, dodgerblue, royalblue);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#welcome {
+    margin-top: 10px;
+}
+
+#welcome h1,
+#welcome p {
+    margin: 0;
+    padding: 0;
+    color: whitesmoke;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 平台介绍容器样式 */
+#introduce .introduce-container {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#introduce .introduce-container:hover {
+    transform: scale(1.05);
+}
+
+#introduce h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    color: dodgerblue;
+}
+
+#introduce p {
+    color: #666;
+}
+
+.daily-box {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.daily-box:hover {
+    transform: scale(1.02);
+}
+
+.daily-box h3 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: dodgerblue;
+}
+
+.daily-box blockquote {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.daily-box blockquote p {
+    font-size: 1em;
+    color: #333;
+}
+
+.daily-box blockquote footer {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* 底部样式 */
+#foot {
+    padding-top: 20px;
+    text-align: center;
+    width: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    #headContent {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #head .el-button {
+        margin-top: 10px;
+    }
+
+    #head #login, #head #register {
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 992px) {
+    #picture .el-carousel {
+        height: 200px;
+    }
+
+    #welcome h1 {
+        font-size: 1.5em;
+    }
+
+    #welcome p {
+        font-size: 1em;
+    }
+
+    #introduce .introduce-container {
+        margin-bottom: 15px;
+    }
+
+    .daily-box {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    #headContent {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    #head .el-button {
+        margin-top: 0;
+    }
+
+    #head #login, #head #register {
+        margin-top: 0;
+    }
+
+    #picture .el-carousel {
+        height: 150px;
+    }
+
+    #welcome h1 {
+        font-size: 1.2em;
+    }
+
+    #welcome p {
+        font-size: 0.9em;
+    }
+
+    #introduce .introduce-container {
+        margin-bottom: 10px;
+    }
+
+    .daily-box {
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    #headContent {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #head .el-button {
+        margin-top: 10px;
+    }
+
+    #head #login, #head #register {
+        margin-top: 10px;
+    }
+
+    #picture .el-carousel {
+        height: 100px;
+    }
+
+    #welcome h1 {
+        font-size: 1em;
+    }
+
+    #welcome p {
+        font-size: 0.8em;
+    }
+
+    #introduce .introduce-container {
+        margin-bottom: 5px;
+    }
+
+    .daily-box {
+        margin-bottom: 5px;
+    }
+}

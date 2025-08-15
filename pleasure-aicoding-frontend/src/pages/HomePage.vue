@@ -34,9 +34,6 @@ const featuredAppsPage = reactive({
 const setPrompt = (prompt: string) => {
   userPrompt.value = prompt
 }
-
-// 优化提示词功能已移除
-
 // 创建应用
 const createApp = async () => {
   if (!userPrompt.value.trim()) {
@@ -161,15 +158,15 @@ onMounted(() => {
     <div class="container">
       <!-- 网站标题和描述 -->
       <div class="hero-section">
-        <h1 class="hero-title">PleaSureAICoding</h1>
-        <p class="hero-description">智慧AI代码生成平台 助您快速实现代码生成</p>
+        <h1 class="hero-title animate-slide-left">PleaSureAICoding</h1>
+        <p class="hero-description animate-slide-right">智慧AI代码生成平台 助您快速实现代码生成</p>
       </div>
 
       <!-- 用户提示词输入框 -->
       <div class="input-section">
         <a-textarea
           v-model:value="userPrompt"
-          placeholder="帮我创建个人博客网站"
+          placeholder="帮我介绍一下冒泡排序的原理"
           :rows="4"
           :maxlength="1000"
           class="prompt-input"
@@ -189,37 +186,37 @@ onMounted(() => {
           type="default"
           @click="
             setPrompt(
-              '创建一个现代化的个人博客网站，包含文章列表、详情页、分类标签、搜索功能、评论系统和个人简介页面。采用简洁的设计风格，支持响应式布局，文章支持Markdown格式，首页展示最新文章和热门推荐。',
+              '创建一个现代化的个人博客网站，包含文章列表和个人简介页面。采用简洁的设计风格，支持响应式布局，首页展示最新文章和热门推荐。',
             )
           "
-          >个人博客网站</a-button
+          >个人博客页</a-button
         >
         <a-button
           type="default"
           @click="
             setPrompt(
-              '设计一个专业的企业官网，包含公司介绍、产品服务展示、新闻资讯、联系我们等页面。采用商务风格的设计，包含轮播图、产品展示卡片、团队介绍、客户案例展示，支持多语言切换和在线客服功能。',
+              '介绍二叉平衡树，用html、css、javascript生成网站来介绍。',
             )
           "
-          >企业官网</a-button
+          >二叉平衡树</a-button
         >
         <a-button
           type="default"
           @click="
             setPrompt(
-              '构建一个功能完整的在线商城，包含商品展示、购物车、用户注册登录、订单管理、支付结算等功能。设计现代化的商品卡片布局，支持商品搜索筛选、用户评价、优惠券系统和会员积分功能。',
+              '构建一个简单的Vue网页，来介绍先来先服务算法。',
             )
           "
-          >在线商城</a-button
+          >先来先服务算法</a-button
         >
         <a-button
           type="default"
           @click="
             setPrompt(
-              '制作一个精美的作品展示网站，适合设计师、摄影师、艺术家等创作者。包含作品画廊、项目详情页、个人简历、联系方式等模块。采用瀑布流或网格布局展示作品，支持图片放大预览和作品分类筛选。',
+              '制作一个纯Html网页，介绍OSI模型。',
             )
           "
-          >作品展示网站</a-button
+          >OSI模型介绍</a-button
         >
       </div>
 
@@ -361,8 +358,6 @@ onMounted(() => {
   width: 100%;
   box-sizing: border-box;
 }
-
-/* 移除居中光束效果 */
 
 /* 英雄区域 */
 .hero-section {
@@ -552,6 +547,39 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 32px;
+}
+
+/* 动画效果 */
+.animate-slide-left {
+  animation: slideInLeft 1.2s ease-out;
+}
+
+.animate-slide-right {
+  animation: slideInRight 1.5s ease-out;
+}
+
+/* 从左向右进入动画 */
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 从右向左进入动画 */
+@keyframes slideInRight {
+  0% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* 响应式设计 */
