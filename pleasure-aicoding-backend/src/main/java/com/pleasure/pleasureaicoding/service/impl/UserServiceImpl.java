@@ -173,6 +173,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
     }
 
     @Override
+    public User getLoginUserPermitNull(HttpServletRequest request) {
+        // 先判断是否已登录
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            return null;  // 未登录时返回 null，不抛出异常
+        }
+        // 从数据库查询（追求性能的话可以注释，直接返回上述结果）
+        // long userId = currentUser.getId();
+        // currentUser = this.getById(userId);
+        return currentUser;  // 即使查询结果为 null 也直接返回
+    }
+
+    @Override
     public boolean userLogout(HttpServletRequest request) {
         // 先判断是否已登录
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
@@ -183,7 +197,4 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
         request.getSession().removeAttribute(USER_LOGIN_STATE);
         return true;
     }
-
-
-
 }

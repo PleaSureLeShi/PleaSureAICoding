@@ -12,8 +12,6 @@ import java.util.List;
 
 /**
  * 用户 服务层。
- *
- * @author <a href="https://github.com/PleaSureLeShi">PleaSure乐事</a>
  */
 public interface UserService extends IService<User> {
     /**
@@ -55,6 +53,14 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 获取当前登录用户（允许未登录）
+     *
+     * @param request
+     * @return 登录用户信息，未登录时返回 null
+     */
+    User getLoginUserPermitNull(HttpServletRequest request);
 
     /**
      * 用户注销
