@@ -97,7 +97,6 @@ CREATE TABLE IF NOT EXISTS `room_member`
     `isMuted`      TINYINT     DEFAULT 0 COMMENT '是否被禁言：0-否，1-是',
     `mutedUntil`   DATETIME NULL COMMENT '禁言到期时间',
     `isDelete`     TINYINT     DEFAULT 0 COMMENT '是否删除',
-    UNIQUE KEY `uk_room_user` (`roomId`, `userId`),
     INDEX `idx_user` (`userId`),
     INDEX `idx_room` (`roomId`),
     FOREIGN KEY (`roomId`) REFERENCES `chat_room` (`id`) ON DELETE CASCADE,
@@ -207,3 +206,21 @@ CREATE TABLE IF NOT EXISTS `system_notification`
     INDEX `idx_is_read` (`isRead`),
     FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) COMMENT '系统通知表';
+
+CREATE TABLE IF NOT EXISTS `material`
+(
+    `id`          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '资料ID',
+    `title`       VARCHAR(200) NOT NULL COMMENT '题目/标题',
+    `content`     TEXT         NOT NULL COMMENT '内容详情',
+    `image_url`   VARCHAR(1024) NULL COMMENT '图片URL（支持懒加载，前端处理）',
+    `author_id`   BIGINT       NOT NULL COMMENT '作者ID（关联user表）',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_delete`   TINYINT  DEFAULT 0 COMMENT '是否删除',
+    INDEX `idx_author` (`author_id`), 
+    INDEX `idx_create_time` (`create_time`),
+    FOREIGN KEY (`author_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) COMMENT '资料存储表' COLLATE = utf8mb4_unicode_ci;
+
+ALTER TABLE room_member
+DROP INDEX uk_room_user;

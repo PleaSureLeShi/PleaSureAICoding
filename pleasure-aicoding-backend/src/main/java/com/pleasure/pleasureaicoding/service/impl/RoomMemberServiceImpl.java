@@ -37,23 +37,65 @@ public class RoomMemberServiceImpl extends ServiceImpl<RoomMemberMapper, RoomMem
         ThrowUtils.throwIf(roomId == null || roomId <= 0, ErrorCode.PARAMS_ERROR, "房间ID不能为空");
         ThrowUtils.throwIf(userId == null || userId <= 0, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
 
-        // 检查是否已经加入
-        if (isUserInRoom(roomId, userId)) {
-            return true;
+        try {
+            // 检查是否已经加入
+            if (isUserInRoom(roomId, userId)) {
+                return true;
+            }
+    
+            // 检查用户是否曾经加入过但已退出(isDelete=1)
+            QueryWrapper queryWrapper = QueryWrapper.create()
+                    .where(ROOM_MEMBER.ROOM_ID.eq(roomId))
+                    .and(ROOM_MEMBER.USER_ID.eq(userId));
+            
+            RoomMember existingMember = this.getOne(queryWrapper);
+            if (existingMember != null) {
+                // 如果用户曾经加入过但已退出，则更新isDelete为0
+                existingMember.setIsDelete(0);
+                existingMember.setJoinTime(LocalDateTime.now());
+                existingMember.setLastReadTime(LocalDateTime.now());
+                return this.updateById(existingMember);
+            }
+    
+            // 创建房间成员记录
+            RoomMember roomMember = RoomMember.builder()
+                    .roomId(roomId)
+                    .userId(userId)
+                    .role("member")
+                    .joinTime(LocalDateTime.now())
+                    .lastReadTime(LocalDateTime.now())
+                    .isMuted(0)
+                    .isDelete(0)
+                    .build();
+
+            return this.save(roomMember);
+        } catch (Exception e) {
+            // 处理唯一约束冲突异常
+            log.error("加入房间失败，可能是并发操作导致的唯一约束冲突: roomId={}, userId={}", roomId, userId, e);
+            
+            // 再次检查是否已经加入，如果已加入则返回成功
+            if (isUserInRoom(roomId, userId)) {
+                return true;
+            }
+            try {
+                QueryWrapper queryWrapper = QueryWrapper.create()
+                        .where(ROOM_MEMBER.ROOM_ID.eq(roomId))
+                        .and(ROOM_MEMBER.USER_ID.eq(userId));
+                    
+                RoomMember existingMember = this.getOne(queryWrapper);
+                if (existingMember != null) {
+                    existingMember.setIsDelete(0);
+                    existingMember.setJoinTime(LocalDateTime.now());
+                    existingMember.setLastReadTime(LocalDateTime.now());
+                    return this.updateById(existingMember);
+                }
+            } catch (Exception ex) {
+                log.error("尝试更新已存在的记录失败: roomId={}, userId={}", roomId, userId, ex);
+            }
+            
+            // 其他异常则抛出
+            throw e;
         }
-
-        // 创建房间成员记录
-        RoomMember roomMember = RoomMember.builder()
-                .roomId(roomId)
-                .userId(userId)
-                .role("member")
-                .joinTime(LocalDateTime.now())
-                .lastReadTime(LocalDateTime.now())
-                .isMuted(0)
-                .isDelete(0)
-                .build();
-
-        return this.save(roomMember);
     }
 
     @Override
@@ -66,8 +108,13 @@ public class RoomMemberServiceImpl extends ServiceImpl<RoomMemberMapper, RoomMem
                 .where(ROOM_MEMBER.ROOM_ID.eq(roomId))
                 .and(ROOM_MEMBER.USER_ID.eq(userId))
                 .and(ROOM_MEMBER.IS_DELETE.eq(0));
-
-        return this.remove(queryWrapper);
+    
+        RoomMember roomMember = this.getOne(queryWrapper);
+        if (roomMember != null) {
+            roomMember.setIsDelete(1);
+            return this.updateById(roomMember);
+        }
+        return false;
     }
 
     @Override

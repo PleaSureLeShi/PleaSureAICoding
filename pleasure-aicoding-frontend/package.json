@@ -1,5 +1,5 @@
 {
-  "name": "yu-ai-code-mother-frontend",
+  "name": "pleasure-aicoding-frontend",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,9 +14,9 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@types/markdown-it": "^14.1.2",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.11.0",
-    "@types/markdown-it": "^14.1.2",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.1.0",
     "pinia": "^3.0.3",

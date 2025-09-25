@@ -10,7 +10,6 @@ import org.springframework.cache.annotation.EnableCaching;
 @MapperScan("com.pleasure.pleasureaicoding.mapper")
 @EnableCaching
 public class PleasureAiCodingApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(PleasureAiCodingApplication.class, args);
     }

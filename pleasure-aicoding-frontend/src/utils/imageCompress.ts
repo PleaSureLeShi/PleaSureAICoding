@@ -1,6 +1,3 @@
-/**
- * 图片压缩工具 - 针对头像优化
- */
 export interface AvatarCompressOptions {
   quality?: number // 压缩质量 0-1，默认0.8
   maxSize?: number // 最大尺寸（正方形），默认400px

@@ -138,10 +138,11 @@ export async function updateUser(body: API.UserUpdateRequest, options?: { [key: 
   })
 }
 
-// 在现有文件中添加以下接口
-
-/** 用户更新自己的信息 POST /user/update/my */
-export async function updateMyInfo(body: API.UserSelfUpdateRequest, options?: { [key: string]: any }) {
+/** 此处后端没有提供注释 POST /user/update/my */
+export async function updateMyInfo(
+  body: API.UserSelfUpdateRequest,
+  options?: { [key: string]: any }
+) {
   return request<API.BaseResponseBoolean>('/user/update/my', {
     method: 'POST',
     headers: {

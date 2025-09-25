@@ -61,6 +61,24 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseChatMessageVO = {
+    code?: number
+    data?: ChatMessageVO
+    message?: string
+  }
+
+  type BaseResponseChatRoomVO = {
+    code?: number
+    data?: ChatRoomVO
+    message?: string
+  }
+
+  type BaseResponseListChatRoomVO = {
+    code?: number
+    data?: ChatRoomVO[]
+    message?: string
+  }
+
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
@@ -82,6 +100,18 @@ declare namespace API {
   type BaseResponsePageChatHistory = {
     code?: number
     data?: PageChatHistory
+    message?: string
+  }
+
+  type BaseResponsePageChatMessageVO = {
+    code?: number
+    data?: PageChatMessageVO
+    message?: string
+  }
+
+  type BaseResponsePageChatRoomVO = {
+    code?: number
+    data?: PageChatRoomVO
     message?: string
   }
 
@@ -133,6 +163,86 @@ declare namespace API {
     lastCreateTime?: string
   }
 
+  type ChatMessageQueryRequest = {
+    pageNum?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    messageType?: string
+    roomId?: number
+    senderId?: number
+    receiverId?: number
+    lastMessageTime?: string
+  }
+
+  type ChatMessageSendRequest = {
+    messageType: string
+    roomId?: number
+    receiverId?: number
+    contentType?: string
+    content: string
+    replyToId?: number
+  }
+
+  type ChatMessageVO = {
+    id?: number
+    messageType?: string
+    roomId?: number
+    senderId?: number
+    senderName?: string
+    senderAvatar?: string
+    receiverId?: number
+    contentType?: string
+    content?: string
+    fileUrl?: string
+    fileName?: string
+    fileSize?: number
+    replyToId?: number
+    isRecalled?: number
+    sendTime?: string
+  }
+
+  type ChatRoomCreateRequest = {
+    roomName: string
+    roomDescription?: string
+    roomType: string
+    maxMembers: number
+    isPublic: number
+    password?: string
+  }
+
+  type ChatRoomJoinRequest = {
+    roomId: number
+    password?: string
+  }
+
+  type ChatRoomQueryRequest = {
+    pageNum?: number
+    pageSize?: number
+    sortField?: string
+    sortOrder?: string
+    roomName?: string
+    roomType?: string
+    status?: number
+    isPublic?: number
+    ownerId?: number
+  }
+
+  type ChatRoomVO = {
+    id?: number
+    roomName?: string
+    roomDescription?: string
+    roomType?: string
+    maxMembers?: number
+    currentMembers?: number
+    ownerId?: number
+    ownerName?: string
+    isPublic?: number
+    status?: number
+    isJoined?: boolean
+    createTime?: string
+  }
+
   type chatToGenCodeParams = {
     appId: number
     message: string
@@ -154,12 +264,24 @@ declare namespace API {
     id: number
   }
 
+  type getChatMessageParams = {
+    messageId: number
+  }
+
+  type getChatRoomParams = {
+    roomId: number
+  }
+
   type getUserByIdParams = {
     id: number
   }
 
   type getUserVOByIdParams = {
     id: number
+  }
+
+  type leaveRoomParams = {
+    roomId: number
   }
 
   type listAppChatHistoryParams = {
@@ -197,6 +319,24 @@ declare namespace API {
     optimizeCountQuery?: boolean
   }
 
+  type PageChatMessageVO = {
+    records?: ChatMessageVO[]
+    pageNumber?: number
+    pageSize?: number
+    totalPage?: number
+    totalRow?: number
+    optimizeCountQuery?: boolean
+  }
+
+  type PageChatRoomVO = {
+    records?: ChatRoomVO[]
+    pageNumber?: number
+    pageSize?: number
+    totalPage?: number
+    totalRow?: number
+    optimizeCountQuery?: boolean
+  }
+
   type PageUserVO = {
     records?: UserVO[]
     pageNumber?: number
@@ -204,6 +344,10 @@ declare namespace API {
     totalPage?: number
     totalRow?: number
     optimizeCountQuery?: boolean
+  }
+
+  type recallMessageParams = {
+    messageId: number
   }
 
   type ServerSentEventString = true

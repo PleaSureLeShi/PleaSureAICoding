@@ -86,6 +86,11 @@ const originItems = [
     title: '应用管理',
   },
   {
+    key:'/chat/RoomPage',
+    label: '房间聊天',
+    title: '房间聊天',
+  },
+  {
     key: 'others',
     label: h('a', { href: 'https://blog.csdn.net/m0_75262255?spm=1000.2115.3001.5343', target: '_blank' }, '站长CSDN'),
     title: '站长CSDN',

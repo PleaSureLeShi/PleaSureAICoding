@@ -8,6 +8,7 @@ import AppChatPage from '@/pages/app/AppChatPage.vue'
 import AppEditPage from '@/pages/app/AppEditPage.vue'
 import ChatManagePage from "@/pages/admin/ChatManagePage.vue";
 import UserProfilePage from "@/pages/general/UserProfilePage.vue";
+import RoomPage from "@/pages/chat/RoomPage.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,11 @@ const router = createRouter({
       component: AppManagePage,
     },
     {
+      path: '/chat/RoomPage',
+      name: '房间聊天',
+      component: RoomPage,
+    },
+    {
       path: '/admin/chatManage',
       name: '对话管理',
       component: ChatManagePage,
@@ -59,7 +65,7 @@ const router = createRouter({
       meta: {
         requireAuth: true
       }
-    }
+    },
   ],
 })
 

@@ -95,7 +95,17 @@ public class ChatRoomServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> i
                 .isDelete(0)
                 .build();
 
-        boolean saveResult = this.save(chatRoom);
+        log.info("Attempting to save chatRoom: {}", chatRoom);
+
+        boolean saveResult;
+        try {
+            saveResult = this.save(chatRoom);
+            log.info("Save result: {}", saveResult);
+        } catch (Exception e) {
+            log.error("Error saving chatRoom: {}", e.getMessage(), e);
+            throw new RuntimeException("创建房间失败: " + e.getMessage());
+        }
+
         ThrowUtils.throwIf(!saveResult, ErrorCode.SYSTEM_ERROR, "创建房间失败");
 
         // 创建者自动加入房间
