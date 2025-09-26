@@ -321,7 +321,7 @@ const roomFormRules = {
 // 表格列定义
 const roomColumns = [
   { title: '房间名', dataIndex: 'roomName', key: 'roomName' },
-  { title: '房主', dataIndex: 'ownerName', key: 'owner', width: 100 },
+  { title: '房主', dataIndex: 'ownerName', key: 'ownerName', width: 100 },
   { 
     title: '类型', 
     dataIndex: 'roomType', 

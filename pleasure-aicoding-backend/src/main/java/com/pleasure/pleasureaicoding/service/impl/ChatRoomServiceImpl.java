@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -172,12 +173,11 @@ public class ChatRoomServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> i
                 .and(CHAT_ROOM.IS_DELETE.eq(0))
                 .orderBy(ROOM_MEMBER.JOIN_TIME, false);
 
-        List<ChatRoom> chatRooms = this.listAs(queryWrapper, ChatRoom.class);
+        // 直接查询为VO对象，保留ownerName字段
+        List<ChatRoomVO> chatRoomVOs = this.listAs(queryWrapper, ChatRoomVO.class);
         
-        // 转换为VO
-        return chatRooms.stream().map(chatRoom -> {
-            ChatRoomVO chatRoomVO = new ChatRoomVO();
-            BeanUtils.copyProperties(chatRoom, chatRoomVO);
+        // 设置已加入标志
+        return chatRoomVOs.stream().map(chatRoomVO -> {
             chatRoomVO.setIsJoined(true); // 已加入的房间
             return chatRoomVO;
         }).collect(Collectors.toList());
@@ -310,12 +310,26 @@ public class ChatRoomServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> i
             joinedRoomIds = userJoinedRooms.stream().collect(Collectors.toSet());
         }
         
+        // 获取所有房主的用户信息
+        Set<Long> ownerIds = chatRoomList.stream()
+                .map(ChatRoom::getOwnerId)
+                .collect(Collectors.toSet());
+        Map<Long, String> ownerNameMap = new HashMap<>();
+        if (!ownerIds.isEmpty()) {
+            List<User> owners = userService.listByIds(ownerIds);
+            ownerNameMap = owners.stream()
+                    .collect(Collectors.toMap(User::getId, User::getUserName));
+        }
+        
         // 转换为VO
         final Set<Long> finalJoinedRoomIds = joinedRoomIds;
+        final Map<Long, String> finalOwnerNameMap = ownerNameMap;
         List<ChatRoomVO> chatRoomVOList = chatRoomList.stream().map(chatRoom -> {
             ChatRoomVO chatRoomVO = new ChatRoomVO();
             BeanUtils.copyProperties(chatRoom, chatRoomVO);
             chatRoomVO.setIsJoined(finalJoinedRoomIds.contains(chatRoom.getId()));
+            // 设置房主名称
+            chatRoomVO.setOwnerName(finalOwnerNameMap.get(chatRoom.getOwnerId()));
             return chatRoomVO;
         }).collect(Collectors.toList());
         
