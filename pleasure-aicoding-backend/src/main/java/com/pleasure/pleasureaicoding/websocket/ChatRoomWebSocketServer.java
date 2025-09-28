@@ -104,17 +104,15 @@ public class ChatRoomWebSocketServer {
             // 添加到用户连接映射
             USER_WEBSOCKETS.put(userId, this);
             
-            log.info("用户连接WebSocket成功，userId: {}, roomId: {}, 当前房间连接数: {}", 
-                    userId, roomId, ROOM_WEBSOCKETS.get(roomId).size());
-            
-            // 通知房间其他用户有新用户上线
-            broadcastToRoom(WebSocketMessage.builder()
-                    .type(WebSocketMessage.Type.USER_ONLINE)
-                    .senderId(userId)
-                    .roomId(roomId)
-                    .data(user.getUserName() + " 进入了房间")
-                    .timestamp(System.currentTimeMillis())
-                    .build(), userId);
+            // 广播用户上线消息
+            WebSocketMessage userOnlineMessage = new WebSocketMessage();
+            userOnlineMessage.setType(WebSocketMessage.Type.USER_ONLINE);
+            userOnlineMessage.setSenderId(userId);
+            userOnlineMessage.setRoomId(roomId);
+            userOnlineMessage.setTimestamp(System.currentTimeMillis());
+            userOnlineMessage.setData(user.getUserName() + " 加入了房间");
+
+            broadcastToRoom(userOnlineMessage, userId);
                     
         } catch (Exception e) {
             log.error("WebSocket连接异常", e);
@@ -132,6 +130,9 @@ public class ChatRoomWebSocketServer {
     @OnClose
     public void onClose() {
         try {
+            // 从用户连接映射中移除
+            USER_WEBSOCKETS.remove(userId);
+            
             // 从房间连接集合中移除
             CopyOnWriteArraySet<ChatRoomWebSocketServer> roomConnections = ROOM_WEBSOCKETS.get(roomId);
             if (roomConnections != null) {
@@ -141,17 +142,12 @@ public class ChatRoomWebSocketServer {
                 }
             }
             
-            // 从用户连接映射中移除
-            USER_WEBSOCKETS.remove(userId);
-            
-            log.info("用户断开WebSocket连接，userId: {}, roomId: {}", userId, roomId);
-            
             // 通知房间其他用户有用户下线
             if (user != null) {
                 broadcastToRoom(WebSocketMessage.builder()
                         .type(WebSocketMessage.Type.USER_OFFLINE)
                         .senderId(userId)
-                        .roomId(roomId)
+                        .roomId(roomId) // 使用JsonConfig全局配置处理Long转String
                         .data(user.getUserName() + " 离开了房间")
                         .timestamp(System.currentTimeMillis())
                         .build(), userId);
@@ -168,31 +164,24 @@ public class ChatRoomWebSocketServer {
     @OnMessage
     public void onMessage(String message, Session session) {
         try {
-            log.info("收到WebSocket消息，userId: {}, roomId: {}, message: {}", userId, roomId, message);
-            
-            // 解析消息
             WebSocketMessage wsMessage = JSONUtil.toBean(message, WebSocketMessage.class);
             String type = wsMessage.getType();
             
             if (WebSocketMessage.Type.SEND_MESSAGE.equals(type)) {
-                // 发送消息
                 handleSendMessage(wsMessage);
             } else if (WebSocketMessage.Type.RECALL_MESSAGE.equals(type)) {
-                // 撤回消息
                 handleRecallMessage(wsMessage);
             } else if (WebSocketMessage.Type.HEARTBEAT.equals(type)) {
-                // 心跳消息
-                sendToUser(WebSocketMessage.builder()
-                        .type(WebSocketMessage.Type.HEARTBEAT)
-                        .timestamp(System.currentTimeMillis())
-                        .build());
+                // 心跳响应
+                WebSocketMessage heartbeatResponse = new WebSocketMessage();
+                heartbeatResponse.setType(WebSocketMessage.Type.HEARTBEAT);
+                heartbeatResponse.setTimestamp(System.currentTimeMillis());
+                sendToUser(heartbeatResponse);
             } else {
                 log.warn("未知的WebSocket消息类型: {}", type);
             }
-            
         } catch (Exception e) {
             log.error("处理WebSocket消息异常", e);
-            sendError("消息处理失败: " + e.getMessage());
         }
     }
 
@@ -227,7 +216,7 @@ public class ChatRoomWebSocketServer {
             broadcastToRoom(WebSocketMessage.builder()
                     .type(WebSocketMessage.Type.NEW_MESSAGE)
                     .senderId(userId)
-                    .roomId(roomId)
+                    .roomId(roomId) // 使用JsonConfig全局配置处理Long转String
                     .data(messageVO)
                     .timestamp(System.currentTimeMillis())
                     .build(), null);
@@ -254,7 +243,7 @@ public class ChatRoomWebSocketServer {
                 broadcastToRoom(WebSocketMessage.builder()
                         .type(WebSocketMessage.Type.MESSAGE_RECALLED)
                         .senderId(userId)
-                        .roomId(roomId)
+                        .roomId(roomId) // 使用JsonConfig全局配置处理Long转String
                         .data(messageId)
                         .timestamp(System.currentTimeMillis())
                         .build(), null);
@@ -273,12 +262,61 @@ public class ChatRoomWebSocketServer {
      */
     private void sendToUser(WebSocketMessage message) {
         try {
-            if (session != null && session.isOpen()) {
-                session.getBasicRemote().sendText(JSONUtil.toJsonStr(message));
-            }
-        } catch (IOException e) {
+            String messageJson = convertWebSocketMessageToJson(message);
+            session.getBasicRemote().sendText(messageJson);
+        } catch (Exception e) {
             log.error("发送WebSocket消息失败，userId: {}", userId, e);
         }
+    }
+    
+    /**
+     * 将WebSocket消息转换为JSON字符串，处理Long类型精度丢失问题
+     */
+    private String convertWebSocketMessageToJson(WebSocketMessage message) {
+        // 创建一个Map来手动构建JSON，确保Long类型转为String
+        java.util.Map<String, Object> jsonMap = new java.util.HashMap<>();
+        jsonMap.put("type", message.getType());
+        
+        // 处理data字段，如果是ChatMessageVO需要特殊处理其中的Long类型字段
+        Object data = message.getData();
+        if (data instanceof com.pleasure.pleasureaicoding.model.vo.ChatMessageVO) {
+            com.pleasure.pleasureaicoding.model.vo.ChatMessageVO messageVO = (com.pleasure.pleasureaicoding.model.vo.ChatMessageVO) data;
+            java.util.Map<String, Object> dataMap = new java.util.HashMap<>();
+            dataMap.put("id", messageVO.getId() != null ? messageVO.getId().toString() : null);
+            dataMap.put("messageType", messageVO.getMessageType());
+            dataMap.put("roomId", messageVO.getRoomId() != null ? messageVO.getRoomId().toString() : null);
+            dataMap.put("senderId", messageVO.getSenderId() != null ? messageVO.getSenderId().toString() : null);
+            dataMap.put("receiverId", messageVO.getReceiverId() != null ? messageVO.getReceiverId().toString() : null);
+            dataMap.put("senderName", messageVO.getSenderName());
+            dataMap.put("senderAvatar", messageVO.getSenderAvatar());
+            dataMap.put("contentType", messageVO.getContentType());
+            dataMap.put("content", messageVO.getContent());
+            dataMap.put("fileUrl", messageVO.getFileUrl());
+            dataMap.put("fileName", messageVO.getFileName());
+            dataMap.put("fileSize", messageVO.getFileSize() != null ? messageVO.getFileSize().toString() : null);
+            dataMap.put("replyToId", messageVO.getReplyToId() != null ? messageVO.getReplyToId().toString() : null);
+            dataMap.put("sendTime", messageVO.getSendTime());
+            dataMap.put("isRecalled", messageVO.getIsRecalled());
+            jsonMap.put("data", dataMap);
+        } else {
+            jsonMap.put("data", data);
+        }
+        
+        // 将Long类型字段转换为String
+        if (message.getSenderId() != null) {
+            jsonMap.put("senderId", message.getSenderId().toString());
+        }
+        if (message.getRoomId() != null) {
+            jsonMap.put("roomId", message.getRoomId().toString());
+        }
+        if (message.getReceiverId() != null) {
+            jsonMap.put("receiverId", message.getReceiverId().toString());
+        }
+        if (message.getTimestamp() != null) {
+            jsonMap.put("timestamp", message.getTimestamp());
+        }
+        
+        return JSONUtil.toJsonStr(jsonMap);
     }
 
     /**
@@ -306,6 +344,47 @@ public class ChatRoomWebSocketServer {
                 .data(errorMessage)
                 .timestamp(System.currentTimeMillis())
                 .build());
+    }
+
+    /**
+     * 静态方法：向房间广播新消息（供HTTP API调用）
+     */
+    public static void broadcastNewMessage(Long roomId, ChatMessageVO messageVO, Long senderId) {
+        CopyOnWriteArraySet<ChatRoomWebSocketServer> roomConnections = ROOM_WEBSOCKETS.get(roomId);
+        if (roomConnections != null && !roomConnections.isEmpty()) {
+            WebSocketMessage message = new WebSocketMessage();
+            message.setType(WebSocketMessage.Type.NEW_MESSAGE);
+            message.setSenderId(senderId);
+            message.setRoomId(roomId);
+            message.setTimestamp(System.currentTimeMillis());
+            message.setData(messageVO);
+
+            for (ChatRoomWebSocketServer connection : roomConnections) {
+                if (!connection.userId.equals(senderId)) {
+                    connection.sendToUser(message);
+                }
+            }
+        }
+    }
+
+    /**
+     * 静态方法：向房间广播消息撤回（供HTTP API调用）
+     */
+    public static void broadcastMessageRecalled(Long roomId, Long messageId, Long senderId) {
+        CopyOnWriteArraySet<ChatRoomWebSocketServer> roomConnections = ROOM_WEBSOCKETS.get(roomId);
+        if (roomConnections != null) {
+            WebSocketMessage message = WebSocketMessage.builder()
+                    .type(WebSocketMessage.Type.MESSAGE_RECALLED)
+                    .senderId(senderId)
+                    .roomId(roomId) // 使用JsonConfig全局配置处理Long转String
+                    .data(messageId)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            
+            for (ChatRoomWebSocketServer connection : roomConnections) {
+                connection.sendToUser(message);
+            }
+        }
     }
 
     /**

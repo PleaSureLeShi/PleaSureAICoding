@@ -132,6 +132,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
         ChatMessage updateMessage = ChatMessage.builder()
                 .id(messageId)
                 .isRecalled(1)
+                .isDelete(1)
                 .build();
 
         return this.updateById(updateMessage);
@@ -169,10 +170,8 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
         }
         
         // 分页查询
-        Page<ChatMessage> chatMessagePage = this.pageAs(Page.of(pageNum, pageSize), queryWrapper, ChatMessage.class);
-        
-        // 转换为VO
-        return getChatMessageVOPage(chatMessagePage);
+        Page<ChatMessageVO> chatMessagePage = this.pageAs(Page.of(pageNum, pageSize), queryWrapper, ChatMessageVO.class);
+        return chatMessagePage;
     }
 
     @Override
@@ -206,10 +205,9 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
         }
         
         // 分页查询
-        Page<ChatMessage> chatMessagePage = this.pageAs(Page.of(pageNum, pageSize), queryWrapper, ChatMessage.class);
+        Page<ChatMessageVO> chatMessagePage = this.pageAs(Page.of(pageNum, pageSize), queryWrapper, ChatMessageVO.class);
         
-        // 转换为VO
-        return getChatMessageVOPage(chatMessagePage);
+        return chatMessagePage;
     }
 
     @Override
@@ -224,7 +222,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
                 .where(CHAT_MESSAGE.ID.eq(messageId))
                 .and(CHAT_MESSAGE.IS_DELETE.eq(0));
 
-        ChatMessage chatMessage = this.getOneAs(queryWrapper, ChatMessage.class);
+        ChatMessageVO chatMessage = this.getOneAs(queryWrapper, ChatMessageVO.class);
         ThrowUtils.throwIf(chatMessage == null, ErrorCode.NOT_FOUND_ERROR, "消息不存在");
         
         // 权限检查
@@ -239,14 +237,11 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
             if (loginUser != null) {
                 boolean isParticipant = chatMessage.getSenderId().equals(loginUser.getId()) 
                         || chatMessage.getReceiverId().equals(loginUser.getId());
-                ThrowUtils.throwIf(!isParticipant, ErrorCode.FORBIDDEN_ERROR, "无权查看该消息");
+                ThrowUtils.throwIf(!isParticipant, ErrorCode.FORBIDDEN_ERROR, "您无权查看该消息");
             }
         }
         
-        // 转换为VO
-        ChatMessageVO chatMessageVO = new ChatMessageVO();
-        BeanUtils.copyProperties(chatMessage, chatMessageVO);
-        return chatMessageVO;
+        return chatMessage;
     }
 
     /**

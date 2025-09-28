@@ -12,7 +12,9 @@ import com.pleasure.pleasureaicoding.model.dto.chatroom.ChatRoomJoinRequest;
 import com.pleasure.pleasureaicoding.model.dto.chatroom.ChatRoomQueryRequest;
 import com.pleasure.pleasureaicoding.model.entity.User;
 import com.pleasure.pleasureaicoding.model.vo.ChatRoomVO;
+import com.pleasure.pleasureaicoding.model.vo.RoomMemberVO;
 import com.pleasure.pleasureaicoding.service.ChatRoomService;
+import com.pleasure.pleasureaicoding.service.RoomMemberService;
 import com.pleasure.pleasureaicoding.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +33,9 @@ public class ChatRoomController {
 
     @Resource
     private ChatRoomService chatRoomService;
+
+    @Resource
+    private RoomMemberService roomMemberService;
 
     @Resource
     private UserService userService;
@@ -122,6 +127,28 @@ public class ChatRoomController {
         boolean result = chatRoomService.leaveRoom(roomId, loginUser);
         
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 获取房间成员列表
+     *
+     * @param roomId 房间ID
+     * @param request HTTP请求
+     * @return 成员列表
+     */
+    @GetMapping("/{roomId}/members")
+    @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
+    public BaseResponse<List<RoomMemberVO>> getRoomMembers(@PathVariable Long roomId, HttpServletRequest request) {
+        ThrowUtils.throwIf(roomId == null || roomId <= 0, ErrorCode.PARAMS_ERROR, "房间ID不能为空");
+        
+        User loginUser = userService.getLoginUser(request);
+        
+        // 检查用户是否已加入该房间
+        boolean isJoined = roomMemberService.isUserInRoom(roomId, loginUser.getId());
+        ThrowUtils.throwIf(!isJoined, ErrorCode.FORBIDDEN_ERROR, "您还未加入该房间");
+        
+        List<RoomMemberVO> roomMembers = roomMemberService.getRoomMembersWithRole(roomId);
+        return ResultUtils.success(roomMembers);
     }
 
     /**

@@ -2,6 +2,20 @@
 /* eslint-disable */
 import request from '@/request'
 
+/** 此处后端没有提供注释 GET /chatRoom/${param0}/members */
+export async function getRoomMembers(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getRoomMembersParams,
+  options?: { [key: string]: any }
+) {
+  const { roomId: param0, ...queryParams } = params
+  return request<API.BaseResponseListRoomMemberVO>(`/chatRoom/${param0}/members`, {
+    method: 'GET',
+    params: { ...queryParams },
+    ...(options || {}),
+  })
+}
+
 /** 此处后端没有提供注释 POST /chatRoom/create */
 export async function createChatRoom(
   body: API.ChatRoomCreateRequest,

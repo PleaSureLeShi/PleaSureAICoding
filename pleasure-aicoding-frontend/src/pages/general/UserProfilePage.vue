@@ -179,6 +179,70 @@ const handleSubmit = async () => {
   }
 }
 
+// 压缩图片
+const compressImage = (file: File, maxSizeKB: number = 500): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // 计算压缩后的尺寸
+      let { width, height } = img;
+      const maxDimension = 800; // 最大尺寸
+      
+      if (width > height && width > maxDimension) {
+        height = (height * maxDimension) / width;
+        width = maxDimension;
+      } else if (height > maxDimension) {
+        width = (width * maxDimension) / height;
+        height = maxDimension;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // 绘制图片
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      // 转换为blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const originalSizeKB = Math.round(file.size / 1024);
+          const compressedSizeKB = Math.round(blob.size / 1024);
+          
+          if (compressedSizeKB <= maxSizeKB) {
+            // 压缩成功
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          } else {
+            // 需要进一步压缩质量
+            canvas.toBlob((finalBlob) => {
+              if (finalBlob) {
+                const finalFile = new File([finalBlob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                resolve(finalFile);
+              } else {
+                resolve(file);
+              }
+            }, 'image/jpeg', 0.7);
+          }
+        } else {
+          // 压缩失败，返回原文件
+          resolve(file);
+        }
+      }, 'image/jpeg', 0.8);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 // 合并后的头像上传处理方法
 const handleAvatarUpload = async ({ file }: { file: File }) => {
   try {

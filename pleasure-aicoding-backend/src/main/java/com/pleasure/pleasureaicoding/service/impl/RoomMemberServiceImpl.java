@@ -7,6 +7,7 @@ import com.pleasure.pleasureaicoding.exception.ThrowUtils;
 import com.pleasure.pleasureaicoding.mapper.RoomMemberMapper;
 import com.pleasure.pleasureaicoding.model.entity.RoomMember;
 import com.pleasure.pleasureaicoding.model.entity.User;
+import com.pleasure.pleasureaicoding.model.vo.RoomMemberVO;
 import com.pleasure.pleasureaicoding.service.RoomMemberService;
 import com.pleasure.pleasureaicoding.service.UserService;
 import jakarta.annotation.Resource;
@@ -143,6 +144,41 @@ public class RoomMemberServiceImpl extends ServiceImpl<RoomMemberMapper, RoomMem
                 .and(USER.IS_DELETE.eq(0));
 
         return userService.listAs(queryWrapper, User.class);
+    }
+
+    @Override
+    public List<RoomMemberVO> getRoomMembersWithRole(Long roomId) {
+        ThrowUtils.throwIf(roomId == null || roomId <= 0, ErrorCode.PARAMS_ERROR, "房间ID不能为空");
+
+        // 先获取房间成员信息
+        QueryWrapper roomMemberQuery = QueryWrapper.create()
+                .where(ROOM_MEMBER.ROOM_ID.eq(roomId))
+                .and(ROOM_MEMBER.IS_DELETE.eq(0))
+                .orderBy(ROOM_MEMBER.ROLE.asc(), ROOM_MEMBER.JOIN_TIME.asc());
+
+        List<RoomMember> roomMembers = this.list(roomMemberQuery);
+        
+        return roomMembers.stream()
+                .filter(roomMember -> roomMember.getUserId() != null) // 过滤掉userId为null的记录
+                .map(roomMember -> {
+                    User user = userService.getById(roomMember.getUserId());
+                    if (user == null || user.getIsDelete() == 1) {
+                        return null;
+                    }
+                    return RoomMemberVO.builder()
+                            .id(user.getId())
+                            .userName(user.getUserName())
+                            .userAvatar(user.getUserAvatar())
+                            .userProfile(user.getUserProfile())
+                            .role(roomMember.getRole())
+                            .joinTime(roomMember.getJoinTime())
+                            .lastReadTime(roomMember.getLastReadTime())
+                            .isMuted(roomMember.getIsMuted())
+                            .mutedUntil(roomMember.getMutedUntil())
+                            .build();
+                })
+                .filter(vo -> vo != null)
+                .collect(Collectors.toList());
     }
 
     @Override

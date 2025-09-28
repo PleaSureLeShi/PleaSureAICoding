@@ -79,6 +79,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseListRoomMemberVO = {
+    code?: number
+    data?: RoomMemberVO[]
+    message?: string
+  }
+
   type BaseResponseLoginUserVO = {
     code?: number
     data?: LoginUserVO
@@ -272,6 +278,10 @@ declare namespace API {
     roomId: number
   }
 
+  type getRoomMembersParams = {
+    roomId: number
+  }
+
   type getUserByIdParams = {
     id: number
   }
@@ -348,6 +358,18 @@ declare namespace API {
 
   type recallMessageParams = {
     messageId: number
+  }
+
+  type RoomMemberVO = {
+    id?: number
+    userName?: string
+    userAvatar?: string
+    userProfile?: string
+    role?: string
+    joinTime?: string
+    lastReadTime?: string
+    isMuted?: number
+    mutedUntil?: string
   }
 
   type ServerSentEventString = true

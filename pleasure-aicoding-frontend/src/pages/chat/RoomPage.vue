@@ -19,7 +19,9 @@
                     :row-key="(record: RoomInfo) => record.id"
                     :pagination="{ pageSize: 5 }"
                     size="small"
-                    @row-click="selectRoom"
+                    :custom-row="(record: RoomInfo) => ({
+                      onClick: () => selectRoom(record)
+                    })"
                   >
                     <template #bodyCell="{ column, record }">
                       <template v-if="column.key === 'status'">
@@ -45,7 +47,9 @@
                     :row-key="(record: RoomInfo) => record.id"
                     :pagination="{ pageSize: 5 }"
                     size="small"
-                    @row-click="selectRoom"
+                    :custom-row="(record: RoomInfo) => ({
+                      onClick: () => selectRoom(record)
+                    })"
                   >
                     <template #bodyCell="{ column, record }">
                       <template v-if="column.key === 'status'">
@@ -82,17 +86,17 @@
                   </a-space>
                 </div>
                 <div class="room-actions">
-                  <a-button 
-                    v-if="!isJoined(currentRoom.id)" 
-                    type="primary" 
+                  <a-button
+                    v-if="!isJoined(currentRoom.id)"
+                    type="primary"
                     @click="joinRoom(currentRoom)"
                   >
                     加入房间
                   </a-button>
-                  <a-button 
-                    v-else 
-                    type="primary" 
-                    danger 
+                  <a-button
+                    v-else
+                    type="primary"
+                    danger
                     @click="leaveRoom(currentRoom)"
                   >
                     退出房间
@@ -110,8 +114,8 @@
               >
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'role'">
-                    <a-tag :color="record.role === 'OWNER' ? 'gold' : 'blue'">
-                      {{ record.role === 'OWNER' ? '房主' : '成员' }}
+                    <a-tag :color="record.role === 'owner' ? 'gold' : 'blue'">
+                      {{ record.role === 'owner' ? '房主' : '成员' }}
                     </a-tag>
                   </template>
                 </template>
@@ -120,40 +124,52 @@
               <a-divider orientation="left">聊天消息</a-divider>
               <div class="chat-container">
                 <div class="message-list" ref="messageListRef">
-                  <div 
-                    v-for="message in roomMessages" 
-                    :key="message.id" 
+                  <!-- 调试信息 -->
+                  <div v-if="roomMessages.length === 0" class="debug-info">
+                    <p>消息列表为空</p>
+                    <p>当前房间: {{ currentRoom?.roomName || '未选择' }}</p>
+                    <p>消息数量: {{ roomMessages.length }}</p>
+                  </div>
+
+                  <div
+                    v-for="message in sortedRoomMessages"
+                    :key="message.id"
                     class="message-item"
-                    :class="{ 'message-mine': message.sender_id === currentUser.id }"
+                    :class="{ 'message-mine': message.senderId === currentUser.id }"
                   >
-                    <div v-if="message.is_recalled" class="message-recalled">
-                      {{ message.sender_nickname }} 撤回了一条消息
+                    <div v-if="message.isRecalled" class="message-recalled">
+                      {{ message.senderName }} 撤回了一条消息
                     </div>
                     <div v-else class="message-content">
-                      <a-avatar :src="message.sender_avatar || '/default-avatar.png'" class="message-avatar" />
+                      <a-avatar :src="message.senderAvatar || '/default-avatar.png'" class="message-avatar" />
                       <div class="message-body">
                         <div class="message-header">
-                          <span class="sender-name">{{ message.sender_nickname }}</span>
-                          <span class="message-time">{{ formatTime(message.create_time) }}</span>
+                          <span class="sender-name">{{ message.senderName }}</span>
+                          <span class="message-time">{{ formatTime(message.sendTime) }}</span>
                         </div>
-                        <div v-if="message.message_type === 'TEXT'" class="message-text">
+
+                        <div v-if="message.contentType === 'TEXT'" class="message-text">
                           {{ message.content }}
                         </div>
-                        <div v-else-if="message.message_type === 'FILE'" class="message-file">
-                          <file-outlined /> 
-                          <a :href="message.file_url" target="_blank">{{ message.file_name }}</a>
+                        <div v-else-if="message.contentType === 'FILE' || message.contentType === 'file'" class="message-file">
+                          <FileOutlined />
+                          <a :href="message.fileUrl" target="_blank">{{ message.fileName }}</a>
+                        </div>
+                        <div v-else class="message-text">
+                          <!-- 兜底显示 -->
+                          {{ message.content }}
                         </div>
                       </div>
-                      <div v-if="message.sender_id === currentUser.id && !message.is_recalled" class="message-actions">
+                      <div v-if="message.senderId === currentUser.id && !message.isRecalled" class="message-actions">
                         <a-button type="text" size="small" @click="recallMessage(message)">撤回</a-button>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="chat-input">
-                  <a-input 
-                    v-model:value="messageContent" 
-                    placeholder="输入消息" 
+                  <a-input
+                    v-model:value="messageContent"
+                    placeholder="输入消息"
                     @pressEnter="sendTextMessage"
                   >
                     <template #suffix>
@@ -227,6 +243,8 @@ import { message } from 'ant-design-vue';
 import { UploadOutlined, FileOutlined } from '@ant-design/icons-vue';
 import axios from 'axios';
 import type { UploadProps } from 'ant-design-vue';
+// 导入openapi2ts生成的API
+import { sendMessage } from '@/api/chatMessageController';
 
 // 定义类型
 interface RoomInfo {
@@ -244,23 +262,32 @@ interface RoomInfo {
 
 interface UserInfo {
   id: number;
-  nickname: string;
-  avatar?: string;
+  userName: string;
+  userAvatar?: string;
+  userProfile?: string;
   role: string;
+  joinTime?: string;
+  lastReadTime?: string;
+  isMuted?: number;
+  mutedUntil?: string;
 }
 
 interface MessageInfo {
   id: number;
-  room_id: number;
-  sender_id: number;
-  sender_nickname: string;
-  sender_avatar?: string;
-  message_type: 'TEXT' | 'FILE';
+  messageType?: string;
+  roomId?: number;
+  senderId: number;
+  senderName: string;
+  senderAvatar?: string;
+  receiverId?: number;
+  contentType: 'TEXT' | 'FILE';
   content: string;
-  file_url?: string;
-  file_name?: string;
-  is_recalled: boolean;
-  create_time: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  replyToId?: number;
+  isRecalled: number;
+  sendTime: string;
 }
 
 // 创建API实例
@@ -290,6 +317,14 @@ const fileList = ref<any[]>([]);
 const websocket = ref<WebSocket | null>(null);
 const heartbeatTimer = ref<number | null>(null);
 
+// 计算属性：排序后的消息列表
+const sortedRoomMessages = computed(() => {
+  return [...roomMessages.value].sort((a, b) => {
+    // 按发送时间升序排列，最旧的消息在上面，最新的在下面
+    return new Date(a.sendTime).getTime() - new Date(b.sendTime).getTime();
+  });
+});
+
 // 表单相关
 const roomFormRef = ref();
 const roomForm = reactive({
@@ -305,15 +340,15 @@ const roomFormRules = {
   room_name: [{ required: true, message: '请输入房间名称', trigger: 'blur' }],
   room_type: [{ required: true, message: '请选择房间类型', trigger: 'change' }],
   room_status: [{ required: true, message: '请选择房间状态', trigger: 'change' }],
-  password: [{ 
-    required: false, 
+  password: [{
+    required: false,
     validator: (rule: any, value: string) => {
       if (roomForm.room_status === 'PRIVATE' && (!value || value.trim() === '')) {
         return Promise.reject('私密房间必须设置密码');
       }
       return Promise.resolve();
-    }, 
-    trigger: 'blur' 
+    },
+    trigger: 'blur'
   }],
   max_members: [{ required: true, message: '请设置人数上限', trigger: 'change' }],
 };
@@ -322,10 +357,10 @@ const roomFormRules = {
 const roomColumns = [
   { title: '房间名', dataIndex: 'roomName', key: 'roomName' },
   { title: '房主', dataIndex: 'ownerName', key: 'ownerName', width: 100 },
-  { 
-    title: '类型', 
-    dataIndex: 'roomType', 
-    key: 'type', 
+  {
+    title: '类型',
+    dataIndex: 'roomType',
+    key: 'type',
     width: 80,
     customRender: ({ text }: { text: string }) => getRoomTypeChinese(text)
   },
@@ -335,7 +370,7 @@ const roomColumns = [
 ];
 
 const memberColumns = [
-  { title: '昵称', dataIndex: 'nickname', key: 'nickname' },
+  { title: '昵称', dataIndex: 'userName', key: 'userName' },
   { title: '角色', key: 'role', width: 100 },
 ];
 
@@ -352,12 +387,20 @@ onUnmounted(() => {
 // 用户相关方法
 const getCurrentUser = async () => {
   try {
-      const response = await api.get('/user/get/login');
-          Object.assign(currentUser, response.data.data);
-            } catch (error) {
-                console.error('获取用户信息失败:', error);
-              }
-            };
+    const response = await api.get('/user/get/login');
+    if (response.data.code === 0 && response.data.data) {
+      Object.assign(currentUser, response.data.data);
+    } else {
+      message.error('获取用户信息失败，请重新登录');
+      // 跳转到登录页面
+      window.location.href = '/user/login';
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+    message.error('获取用户信息失败，请重新登录');
+    window.location.href = '/user/login';
+  }
+};
 
 
 // 房间相关方法
@@ -373,11 +416,31 @@ const fetchRooms = async () => {
 };
 
 const selectRoom = async (record: RoomInfo) => {
-  currentRoom.value = record;
-  await fetchRoomMembers(record.id);
-  await fetchRoomMessages(record.id);
-  scrollToBottom();
-  // connectToRoom(record.id);
+  // 检查用户是否已登录
+  if (!currentUser.id) {
+    message.error('请先登录');
+    return;
+  }
+
+  // 检查用户是否已加入该房间
+  if (!isJoined(record.id)) {
+    message.warning('您还未加入该房间，请先加入');
+    return;
+  }
+
+  try {
+    currentRoom.value = record;
+
+    await fetchRoomMembers(record.id);
+    await fetchRoomMessages(record.id);
+    scrollToBottom();
+    connectToRoom(record.id);
+
+    message.success(`已进入房间: ${record.roomName}`);
+  } catch (error) {
+    console.error('进入房间失败:', error);
+    message.error('进入房间失败，请重试');
+  }
 };
 
 const fetchRoomMembers = async (roomId: number) => {
@@ -392,7 +455,7 @@ const fetchRoomMembers = async (roomId: number) => {
 
 const fetchRoomMessages = async (roomId: number) => {
   try {
-    const response = await api.post('/chatMessage/room/list/page', { roomId, current: 1, pageSize: 50 });
+    const response = await api.post('/chatMessage/room/list/page', { roomId, pageNum: 1, pageSize: 50 });
     roomMessages.value = response.data.data.records || [];
   } catch (error) {
     message.error('获取聊天记录失败');
@@ -435,7 +498,7 @@ const leaveRoom = async (room: RoomInfo) => {
       message.error('房主不能退出房间，请先转让房主或解散房间');
       return;
     }
-    
+
     const response = await api.post(`/chatRoom/leave/${room.id}`);
     // 只有当后端返回成功时才显示成功消息
     if (response.data && response.data.code === 0) {
@@ -466,13 +529,13 @@ const createRoom = async () => {
   try {
     // 表单验证
     await roomFormRef.value.validate();
-    
+
     // 检查私密房间是否设置了密码
     if (roomForm.room_status === 'PRIVATE' && (!roomForm.password || roomForm.password.trim() === '')) {
       message.error('私密房间必须设置密码');
       return;
     }
-    
+
     // 构造与后端匹配的payload
     const payload = {
       roomName: roomForm.room_name,
@@ -482,7 +545,7 @@ const createRoom = async () => {
       isPublic: roomForm.room_status === 'PUBLIC' ? 1 : 0,
       password: roomForm.room_status === 'PRIVATE' ? roomForm.password : null // 私密房间必须有密码
     };
-    
+
     const response = await api.post('/chatRoom/create', payload);
     // 只有当后端返回成功时才显示成功消息
     if (response.data && response.data.code === 0) {
@@ -511,18 +574,22 @@ const createRoom = async () => {
     console.error(error);
   }
 };
-
-// 消息相关方法
-const sendTextMessage = async () => {
-  if (!currentRoom.value || !messageContent.value.trim()) return;
   
+  // 消息相关方法
+  const sendTextMessage = async () => {
+  if (!currentRoom.value || !messageContent.value.trim()) return;
+
   try {
     const messageData = {
-      room_id: currentRoom.value.id,
-      message_type: 'TEXT',
+      roomId: currentRoom.value.id,
+      messageType: 'room',
+      contentType: 'text',
       content: messageContent.value,
     };
-    await api.post('/chatMessage/send', messageData);
+    
+    // 使用openapi2ts生成的API方法
+    const response = await sendMessage(messageData);
+    
     messageContent.value = '';
     // 消息会通过WebSocket推送，不需要手动添加
   } catch (error) {
@@ -533,11 +600,25 @@ const sendTextMessage = async () => {
 
 const recallMessage = async (msg: MessageInfo) => {
   try {
-    await api.post(`/chatMessage/${msg.id}/recall`);
+    // 检查消息发送时间是否超过2分钟
+    const sendTime = new Date(msg.sendTime);
+    const now = new Date();
+    const diffMinutes = Math.floor((now.getTime() - sendTime.getTime()) / (1000 * 60));
+
+    if (diffMinutes > 2) {
+      message.warning('消息发送超过2分钟，无法撤回');
+      return;
+    }
+
+    await api.post(`/chatMessage/recall/${msg.id}`);
     message.success('消息已撤回');
     // 消息撤回状态会通过WebSocket更新
-  } catch (error) {
-    message.error('撤回消息失败');
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      message.error(error.response.data.message);
+    } else {
+      message.error('撤回消息失败');
+    }
     console.error(error);
   }
 };
@@ -558,11 +639,11 @@ const uploadFile = async () => {
     message.warning('请选择文件');
     return;
   }
-  
+
   try {
     const formData = new FormData();
     formData.append('file', fileList.value[0]);
-    formData.append('room_id', currentRoom.value.id.toString());
+    formData.append('roomId', currentRoom.value.id.toString());
     await api.post('/chatMessage/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -604,43 +685,99 @@ const stopHeartbeat = () => {
   }
 };
 
+const connectToRoom = (roomId: number) => {
+  // 关闭之前的连接
+  closeWebSocket();
+
+  // 构建WebSocket URL
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = import.meta.env.VITE_APP_WS_HOST || window.location.host;
+  const wsUrl = `${protocol}//${host}/api/ws/room/${roomId}?userId=${currentUser.id}`;
+
+  // 创建WebSocket连接
+  websocket.value = new WebSocket(wsUrl);
+
+  // 连接打开时的处理
+  websocket.value.onopen = () => {
+    // WebSocket连接已建立
+    message.success('已连接到聊天室');
+    startHeartbeat();
+  };
+
+  // 接收消息的处理
+  websocket.value.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      handleWebSocketMessage(data);
+    } catch (error) {
+      console.error('处理WebSocket消息失败:', error);
+    }
+  };
+
+  // 错误处理
+  websocket.value.onerror = (error) => {
+    console.error('WebSocket连接错误:', error);
+    message.error('聊天室连接出错');
+  };
+
+  // 连接关闭的处理
+  websocket.value.onclose = () => {
+    // WebSocket连接已关闭
+    stopHeartbeat();
+  };
+};
+
 const handleWebSocketMessage = (data: any) => {
   switch (data.type) {
-    case 'MESSAGE':
+    case 'NEW_MESSAGE':
       handleNewMessage(data.data);
       break;
-    case 'RECALL':
+    case 'MESSAGE_RECALLED':
       handleMessageRecall(data.data);
       break;
     case 'ROOM_UPDATE':
       handleRoomUpdate();
       break;
-    case 'PONG':
+    case 'HEARTBEAT':
       // 心跳响应，不需要处理
       break;
     default:
-      console.log('未知的WebSocket消息类型', data);
+      // 未知消息类型
+      break;
   }
 };
 
-const handleNewMessage = (messageData: MessageInfo) => {
-  if (currentRoom.value && messageData.room_id === currentRoom.value.id) {
-    roomMessages.value.push(messageData);
+const handleNewMessage = (messageData: any) => {
+ 
+  if (currentRoom.value && String(messageData.roomId) === String(currentRoom.value.id)) {
+    roomMessages.value.push(messageData); // 改为push，让计算属性来处理排序
     scrollToBottom();
   }
 };
 
-const handleMessageRecall = (recallData: { message_id: number }) => {
-  const index = roomMessages.value.findIndex(msg => msg.id === recallData.message_id);
+const handleMessageRecall = (recallData: any) => {
+  // 处理不同的数据格式
+  let messageId: number;
+  if (typeof recallData === 'number') {
+    messageId = recallData;
+  } else if (recallData.message_id) {
+    messageId = recallData.message_id;
+  } else if (recallData.messageId) {
+    messageId = recallData.messageId;
+  } else {
+    return;
+  }
+
+  const index = roomMessages.value.findIndex(msg => msg.id === messageId);
   if (index !== -1) {
-    roomMessages.value[index].is_recalled = true;
+    roomMessages.value[index].isRecalled = 1;
   }
 };
 
 const handleRoomUpdate = async () => {
   // 房间信息更新，刷新列表
   await fetchRooms();
-  
+
   // 如果当前选中的房间，也刷新成员列表
   if (currentRoom.value) {
     const roomId = currentRoom.value.id;
@@ -831,17 +968,29 @@ const getRoomTypeChinese = (type: string) => {
   gap: 8px;
 }
 
-/* 响应式调整 */
+.debug-info {
+  padding: 16px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  color: #856404;
+}
+
+.debug-info p {
+  margin: 4px 0;
+  font-size: 14px;
+}
 @media (max-width: 768px) {
   .main-content {
     padding: 16px;
   }
-  
+
   .room-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .room-actions {
     margin-top: 8px;
   }

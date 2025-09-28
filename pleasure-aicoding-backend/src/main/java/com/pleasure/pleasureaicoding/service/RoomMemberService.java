@@ -3,6 +3,7 @@ package com.pleasure.pleasureaicoding.service;
 import com.mybatisflex.core.service.IService;
 import com.pleasure.pleasureaicoding.model.entity.RoomMember;
 import com.pleasure.pleasureaicoding.model.entity.User;
+import com.pleasure.pleasureaicoding.model.vo.RoomMemberVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,6 +47,14 @@ public interface RoomMemberService extends IService<RoomMember> {
      * @return 成员列表
      */
     List<User> getRoomMembers(Long roomId);
+
+    /**
+     * 获取房间成员详细信息列表（包含角色信息）
+     *
+     * @param roomId 房间ID
+     * @return 成员详细信息列表
+     */
+    List<RoomMemberVO> getRoomMembersWithRole(Long roomId);
 
     /**
      * 获取房间成员数量

@@ -13,6 +13,7 @@ import com.pleasure.pleasureaicoding.model.entity.User;
 import com.pleasure.pleasureaicoding.model.vo.ChatMessageVO;
 import com.pleasure.pleasureaicoding.service.ChatMessageService;
 import com.pleasure.pleasureaicoding.service.UserService;
+import com.pleasure.pleasureaicoding.websocket.ChatRoomWebSocketServer;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,17 @@ public class ChatMessageController {
         User loginUser = userService.getLoginUser(request);
         Long messageId = chatMessageService.sendMessage(chatMessageSendRequest, loginUser);
         
+        // 如果是房间消息，通过WebSocket广播
+        if ("room".equals(chatMessageSendRequest.getMessageType()) && chatMessageSendRequest.getRoomId() != null) {
+            try {
+                ChatMessageVO messageVO = chatMessageService.getChatMessageVO(messageId, loginUser);
+                ChatRoomWebSocketServer.broadcastNewMessage(chatMessageSendRequest.getRoomId(), messageVO, loginUser.getId());
+            } catch (Exception e) {
+                log.error("WebSocket广播消息失败", e);
+                // 不影响HTTP响应，只记录日志
+            }
+        }
+        
         return ResultUtils.success(messageId);
     }
 
@@ -66,7 +78,26 @@ public class ChatMessageController {
         ThrowUtils.throwIf(messageId == null || messageId <= 0, ErrorCode.PARAMS_ERROR, "消息ID不能为空");
         
         User loginUser = userService.getLoginUser(request);
+        
+        // 先获取消息信息，用于WebSocket广播
+        ChatMessageVO messageVO = null;
+        try {
+            messageVO = chatMessageService.getChatMessageVO(messageId, loginUser);
+        } catch (Exception e) {
+            log.warn("获取消息信息失败，messageId: {}", messageId, e);
+        }
+        
         boolean result = chatMessageService.recallMessage(messageId, loginUser);
+        
+        // 如果撤回成功且是房间消息，通过WebSocket广播
+        if (result && messageVO != null && "room".equals(messageVO.getMessageType()) && messageVO.getRoomId() != null) {
+            try {
+                ChatRoomWebSocketServer.broadcastMessageRecalled(messageVO.getRoomId(), messageId, loginUser.getId());
+            } catch (Exception e) {
+                log.error("WebSocket广播消息撤回失败", e);
+                // 不影响HTTP响应，只记录日志
+            }
+        }
         
         return ResultUtils.success(result);
     }
